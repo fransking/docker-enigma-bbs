@@ -1,8 +1,13 @@
-FROM balenalib/raspberry-pi:build as build
+ROM balenalib/raspberry-pi:build as build
+
+ARG arch
+RUN test -n "${arch}"
+RUN echo ${arch}
 
 ENV NVM_DIR /root/.nvm
 ENV NODE_VERSION 10
 ENV ENIGMA_BRANCH 0.0.10-alpha
+
 
 RUN apt-get update && apt-get upgrade && apt-get install -y --no-install-recommends \
         cvs \
@@ -35,8 +40,10 @@ RUN apt-get update && apt-get upgrade && apt-get install -y --no-install-recomme
 
 FROM balenalib/raspberry-pi:run
 
+ARG arch
+
 # sexyz
-COPY --from=build /build/sbbs/src/sbbs3/gcc.linux.armv7l.exe.release/sexyz /usr/local/bin/
+COPY --from=build /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.release/sexyz /usr/local/bin/
 
 # nvm
 COPY --from=build /root/.nvm /root/.nvm
