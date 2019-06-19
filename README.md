@@ -12,8 +12,18 @@ Assuming that you have Docker installed, run the following command:
 ````bash
 docker run -d \
   -p 8888:8888 \
-  davestephens/enigma-bbs
+  fransking/enigma-bbs-arm32v6
 ````
+
+or 
+
+````bash
+docker run -d \
+  -p 8888:8888 \
+  fransking/enigma-bbs-arm32v7
+````
+
+depending on whether you have a raspberry pi 1/zero (armv6) or later model (armv7)
 
 As no config has been supplied, the container will use a basic one so that it starts successfully. ENiGMA½ listens via
 telnet on port 8888. Connect and try it out!
