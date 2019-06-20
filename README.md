@@ -47,6 +47,7 @@ for the mountable volumes - art, config, db, filebase, logs, mail and mods.
     │   ├── my_menus.hjson
     │   └── my_prompts.hjson
     ├── db
+    ├── www (note you should copy files from https://github.com/NuSkooler/enigma-bbs/tree/master/www)
     ├── filebase
     ├── logs
     ├── mail
@@ -66,12 +67,13 @@ for the mountable volumes - art, config, db, filebase, logs, mail and mods.
         -v ~/my_sweet_bbs/art:/enigma-bbs/art \
         -v ~/my_sweet_bbs/config:/enigma-bbs/config \
         -v ~/my_sweet_bbs/db:/enigma-bbs/db \
+        -v ~/my_sweet_bbs/www:/enigma-bbs/www \
         -v ~/my_sweet_bbs/filebase:/enigma-bbs/filebase \
         -v ~/my_sweet_bbs/logs:/enigma-bbs/logs \
         -v ~/my_sweet_bbs/filebase:/enigma-bbs/filebase \
         -v ~/my_sweet_bbs/mods:/enigma-bbs/mods \
         -v ~/my_sweet_bbs/mail:/mail \
-        davestephens/enigma-bbs
+        fransking/enigma-bbs-arm32v6|fransking/enigma-bbs-arm32v7
     ````
 
 ## Volumes
@@ -87,6 +89,7 @@ The following volumes are mountable:
 | /enigma-bbs/logs        | Logs                                                                 |
 | /enigma-bbs/mods        | ENiGMA mods                                                          |
 | /mail                   | FTN mail (for use with an external mailer)                           |
+| /www                    | static web content                                                   |
 
 ## TODO
 

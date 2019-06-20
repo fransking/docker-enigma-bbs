@@ -58,6 +58,7 @@ VOLUME /enigma-bbs/db
 VOLUME /enigma-bbs/filebase
 VOLUME /enigma-bbs/logs
 VOLUME /enigma-bbs/mods
+VOLUME /enigma-bbs/www
 VOLUME /mail
 
 # copy base config
