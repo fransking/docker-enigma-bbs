@@ -1,4 +1,4 @@
-ROM balenalib/raspberry-pi:build as build
+FROM balenalib/raspberry-pi:build as build
 
 ARG arch
 RUN test -n "${arch}"
