@@ -1,16 +1,16 @@
 FROM balenalib/raspberry-pi:build as build
 
 ARG arch
+ARG node_mirror
 RUN test -n "${arch}"
-RUN echo ${arch}
 
 ENV NVM_DIR /root/.nvm
-ENV NODE_VERSION 10
-ENV ENIGMA_BRANCH 0.0.10-alpha
+ENV NODE_VERSION 12
+ENV ENIGMA_BRANCH 0.0.11-beta
 
-
-RUN apt-get update && apt-get upgrade && apt-get install -y --no-install-recommends \
-        cvs \
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get upgrade && apt-get install -y --no-install-recommends \
+	cvs \
         zip \
         unzip \
         libnspr4-dev \
@@ -31,9 +31,11 @@ RUN apt-get update && apt-get upgrade && apt-get install -y --no-install-recomme
     && cd /build/sbbs/ \
     && make \
     && cd .. \
+    && export NVM_NODEJS_ORG_MIRROR=${node_mirror} \
     && curl -O https://raw.githubusercontent.com/creationix/nvm/master/install.sh \
     && chmod +x install.sh && ./install.sh \
-    && . ~/.nvm/nvm.sh && nvm install $NODE_VERSION && nvm alias default $NODE_VERSION && npm install -g pm2 \
+    && . ~/.nvm/nvm.sh \
+    && nvm install $NODE_VERSION && nvm alias default $NODE_VERSION && npm install -g pm2 \
     && git clone https://github.com/NuSkooler/enigma-bbs.git --depth 1 --branch $ENIGMA_BRANCH \
     && cd /build/enigma-bbs && npm install --only=production 
 
@@ -41,6 +43,17 @@ RUN apt-get update && apt-get upgrade && apt-get install -y --no-install-recomme
 FROM balenalib/raspberry-pi:run
 
 ARG arch
+
+RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
+RUN apt-get upgrade && apt-get install -y --no-install-recommends \
+	lrzsz \
+        arj \
+        lhasa \
+        unrar-free \
+        p7zip-full \
+	xdms \
+	libimage-exiftool-perl \
+	&& apt-get autoremove
 
 # sexyz
 COPY --from=build /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.release/sexyz /usr/local/bin/
@@ -74,3 +87,4 @@ EXPOSE 8888
 WORKDIR /enigma-bbs
 
 ENTRYPOINT ["/bin/bash", "-c", "cd /enigma-bbs && ./misc/enigma_config.sh && source ~/.nvm/nvm.sh && exec pm2-docker ./main.js"]
+
