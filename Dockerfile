@@ -46,6 +46,8 @@ ARG arch
 
 RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
 RUN apt-get upgrade && apt-get install -y --no-install-recommends \
+	zip \
+	unzip \
 	lrzsz \
         arj \
         lhasa \
