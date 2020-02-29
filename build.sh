@@ -2,18 +2,18 @@
 
 if [ $(arch) == "armv6l" ] 
 then
-    suffix="arm32v6"
-    node_mirror="https://unofficial-builds.nodejs.org/download/release"
+    docker_arch="arm32v6"
 elif [ $(arch) == "armv7l" ]
 then
-    suffix="arm32v7"
-    node_mirror=
+    docker_arch="arm32v7"
 else
    echo "$(arch) not supported"
    exit -1
 fi
 
 docker build \
+--build-arg docker_arch=$docker_arch \
 --build-arg arch=$(arch) \
---build-arg node_mirror=$node_mirror \
--t fransking/enigma-bbs-$suffix .
+-t fransking/enigma-bbs-$docker_arch .
+
+docker image inspect fransking/enigma-bbs-$docker_arch:latest --format='{{.Size}}'

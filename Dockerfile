@@ -1,67 +1,87 @@
-FROM balenalib/raspberry-pi:build as build
+ARG docker_arch
 
-ARG arch
-ARG node_mirror
-RUN test -n "${arch}"
+FROM ${docker_arch}/node:12-alpine as build
 
-ENV NVM_DIR /root/.nvm
-ENV NODE_VERSION 12
 ENV ENIGMA_BRANCH 0.0.11-beta
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-RUN apt-get upgrade && apt-get install -y --no-install-recommends \
-	cvs \
-        zip \
-        unzip \
-        libnspr4-dev \
-        libncurses5-dev \
-        git \
+ARG arch
+RUN test -n "${arch}"
+
+RUN apk add --update build-base \
+        bash \
         curl \
-        build-essential \
+        cvs \
+        git \
+        pkgconfig \
+        autoconf \
+        perl \
         python \
-        libssl-dev \
-        lrzsz \
-        arj \
-        lhasa \
-        unrar-free \
-        p7zip-full \
-    && mkdir build \
-    && mkdir build/sbbs \
-    && wget 'http://cvs.synchro.net/cgi-bin/viewcvs.cgi/*checkout*/install/GNUmakefile' -O /build/sbbs/GNUmakefile \
-    && cd /build/sbbs/ \
-    && make \
-    && cd .. \
-    && export NVM_NODEJS_ORG_MIRROR=${node_mirror} \
-    && curl -O https://raw.githubusercontent.com/creationix/nvm/master/install.sh \
-    && chmod +x install.sh && ./install.sh \
-    && . ~/.nvm/nvm.sh \
-    && nvm install $NODE_VERSION && nvm alias default $NODE_VERSION && npm install -g pm2 \
-    && git clone https://github.com/NuSkooler/enigma-bbs.git --depth 1 --branch $ENIGMA_BRANCH \
-    && cd /build/enigma-bbs && npm install --only=production 
+        zip \
+        patch \
+        nspr-dev && \
+        rm -rf /var/cache/apk/*
+
+RUN mkdir build && \
+    mkdir build/sbbs && \
+    cd /build/sbbs/ && \
+    wget 'ftp://vert.synchro.net/Synchronet/ssrc316c.tgz' && \
+    tar xzfv ssrc316c.tgz && \
+    cd 3rdp/dist && \ 
+    unzip -d cryptlib cryptlib.zip  
+
+# build sexyz
+# we don't want to build cryptlib or spidermonkey just get enough of the build environment to compile sexys
+# without writing our own makefiles
+RUN cd /build/sbbs/3rdp/build && \
+    sed -i '/$(MAKE)/d' GNUmakefile && \
+    make libmozjs && \
+    touch /build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src/jsautocfg.h && \
+    sed -i 's/PTHREAD_MUTEX_RECURSIVE_NP/PTHREAD_MUTEX_RECURSIVE/g' /build/sbbs/src/xpdev/threadwrap.c && \
+    mkdir /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.debug && \
+    cd /build/sbbs/src/sbbs3 && \
+    make sexyz JSINCLUDE=/build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src CRYPTLIBINCLUDE=/build/sbbs/3rdp/dist/cryptlib
+
+# build xdms
+RUN cd /build && \
+    wget https://zakalwe.fi/~shd/foss/xdms/xdms-1.3.2.tar.bz2 && \
+    tar xjfv xdms-1.3.2.tar.bz2 && \
+    cd xdms-1.3.2 && \
+    ./configure && \
+    make install
+
+# build enigma
+RUN cd /build && \
+    git clone https://github.com/NuSkooler/enigma-bbs.git --depth 1 --branch $ENIGMA_BRANCH && \
+    cd /build/enigma-bbs && npm install --only=production && \
+    npm install -g pm2 && \
+    npm cache clean --force
 
 
-FROM balenalib/raspberry-pi:run
+
+FROM ${docker_arch}/node:12-alpine
 
 ARG arch
 
-RUN apt-get update && apt-get install -y --no-install-recommends apt-utils
-RUN apt-get upgrade && apt-get install -y --no-install-recommends \
-	zip \
-	unzip \
-	lrzsz \
-        arj \
-        lhasa \
-        unrar-free \
-        p7zip-full \
-	xdms \
-	libimage-exiftool-perl \
-	&& apt-get autoremove
+RUN apk add --update bash \
+        zip \
+        unzip \
+        lha \
+        unrar \
+        p7zip \
+        unarj \
+	    perl-image-exiftool && \
+        apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+        lrzsz && \
+        rm -rf /var/cache/apk/*
+
+# node libs
+COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+# node binaries
+COPY --from=build /usr/local/bin /usr/local/bin
 
 # sexyz
-COPY --from=build /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.release/sexyz /usr/local/bin/
-
-# nvm
-COPY --from=build /root/.nvm /root/.nvm
+COPY --from=build /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.debug/sexyz /usr/local/bin/
 
 # enigma-bbs
 COPY --from=build /build/enigma-bbs /enigma-bbs
@@ -88,5 +108,4 @@ EXPOSE 8888
 
 WORKDIR /enigma-bbs
 
-ENTRYPOINT ["/bin/bash", "-c", "cd /enigma-bbs && ./misc/enigma_config.sh && source ~/.nvm/nvm.sh && exec pm2-docker ./main.js"]
-
+ENTRYPOINT ["/bin/bash", "-c", "cd /enigma-bbs && ./misc/enigma_config.sh && exec pm2-docker ./main.js"]
