@@ -7,7 +7,8 @@ ENV ENIGMA_BRANCH 0.0.11-beta
 ARG arch
 RUN test -n "${arch}"
 
-RUN apk add --update build-base \
+RUN apk upgrade --update-cache --available && \
+    apk add --update build-base \
         bash \
         curl \
         cvs \
@@ -62,7 +63,8 @@ FROM ${docker_arch}/node:12-alpine
 
 ARG arch
 
-RUN apk add --update bash \
+RUN apk upgrade --update-cache --available && \
+    apk add --update bash \
         zip \
         unzip \
         lha \
@@ -95,6 +97,7 @@ VOLUME /enigma-bbs/logs
 VOLUME /enigma-bbs/mods
 VOLUME /enigma-bbs/www
 VOLUME /mail
+VOLUME /tmp
 
 # copy base config
 COPY config/* /enigma-bbs/misc/
