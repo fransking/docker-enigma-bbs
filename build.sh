@@ -12,6 +12,7 @@ else
 fi
 
 docker build \
+--no-cache \
 --build-arg docker_arch=$docker_arch \
 --build-arg arch=$(arch) \
 -t fransking/enigma-bbs-$docker_arch .

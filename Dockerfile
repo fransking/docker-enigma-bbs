@@ -2,7 +2,7 @@ ARG docker_arch
 
 FROM ${docker_arch}/node:12-alpine as build
 
-ENV ENIGMA_BRANCH 0.0.11-beta
+ENV ENIGMA_BRANCH master
 
 ARG arch
 RUN test -n "${arch}"
@@ -23,10 +23,9 @@ RUN apk upgrade --update-cache --available && \
         rm -rf /var/cache/apk/*
 
 RUN mkdir build && \
-    mkdir build/sbbs && \
-    cd /build/sbbs/ && \
-    wget 'ftp://vert.synchro.net/Synchronet/ssrc316c.tgz' && \
-    tar xzfv ssrc316c.tgz && \
+    cd /build && \
+    git clone https://gitlab.com/SynchronetBBS/sbbs.git && \
+    cd sbbs && \ 
     cd 3rdp/dist && \ 
     unzip -d cryptlib cryptlib.zip  
 
@@ -40,6 +39,7 @@ RUN cd /build/sbbs/3rdp/build && \
     sed -i 's/PTHREAD_MUTEX_RECURSIVE_NP/PTHREAD_MUTEX_RECURSIVE/g' /build/sbbs/src/xpdev/threadwrap.c && \
     mkdir /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.debug && \
     cd /build/sbbs/src/sbbs3 && \
+    make hash && \
     make sexyz JSINCLUDE=/build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src CRYPTLIBINCLUDE=/build/sbbs/3rdp/dist/cryptlib
 
 # build xdms
