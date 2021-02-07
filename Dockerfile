@@ -106,6 +106,9 @@ COPY config/* /enigma-bbs/misc/
 COPY scripts/enigma_config.sh /enigma-bbs/misc/enigma_config.sh
 RUN chmod +x /enigma-bbs/misc/enigma_config.sh
 
+# add trap script for debugging shell commands
+COPY scripts/trap.sh /bin
+
 # Enigma default port
 EXPOSE 8888
 
