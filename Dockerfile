@@ -1,6 +1,6 @@
 ARG docker_arch
 
-FROM ${docker_arch}/node:12-alpine as build
+FROM ${docker_arch}/node:14-alpine as build
 
 ENV ENIGMA_BRANCH master
 
@@ -40,6 +40,7 @@ RUN cd /build/sbbs/3rdp/build && \
     mkdir /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.debug && \
     cd /build/sbbs/src/sbbs3 && \
     make hash && \
+    make git_branch.h git_hash.h && \
     make sexyz JSINCLUDE=/build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src CRYPTLIBINCLUDE=/build/sbbs/3rdp/dist/cryptlib
 
 # build xdms
@@ -59,7 +60,7 @@ RUN cd /build && \
 
 
 
-FROM ${docker_arch}/node:12-alpine
+FROM ${docker_arch}/node:14-alpine
 
 ARG arch
 
