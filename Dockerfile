@@ -67,7 +67,7 @@ RUN apt-get install -y --no-install-recommends \
     unzip \
     lhasa \
     unrar-free \
-    p7zip \
+    p7zip-full \
     arj \
     exiftool \
     lrzsz \
