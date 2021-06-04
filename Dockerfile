@@ -1,27 +1,30 @@
 ARG docker_arch
 
-FROM ${docker_arch}/node:14-alpine as build
+FROM node:14.17-slim as build
 
 ENV ENIGMA_BRANCH master
 
 ARG arch
 RUN test -n "${arch}"
 
-RUN apk upgrade --update-cache --available && \
-    apk add --update build-base \
-        bash \
-        curl \
-        cvs \
-        git \
-        pkgconfig \
-        autoconf \
-        perl \
-        python \
-        zip \
-        patch \
-        nspr-dev && \
-        rm -rf /var/cache/apk/*
+# update base package
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get autoremove -y
 
+# install build dependencies
+RUN apt-get install -y --no-install-recommends \
+    ca-certificates \
+    build-essential \
+    git \
+    unzip \
+    libnspr4-dev \
+    autoconf \
+    pkg-config \
+    python \
+    zip
+
+# download Synchronet source for sexys
 RUN mkdir build && \
     cd /build && \
     git clone https://gitlab.com/SynchronetBBS/sbbs.git && \
@@ -34,22 +37,11 @@ RUN mkdir build && \
 # without writing our own makefiles
 RUN cd /build/sbbs/3rdp/build && \
     sed -i '/$(MAKE)/d' GNUmakefile && \
-    make libmozjs && \
-    touch /build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src/jsautocfg.h && \
-    sed -i 's/PTHREAD_MUTEX_RECURSIVE_NP/PTHREAD_MUTEX_RECURSIVE/g' /build/sbbs/src/xpdev/threadwrap.c && \
     mkdir /build/sbbs/src/sbbs3/gcc.linux.${arch}.exe.debug && \
     cd /build/sbbs/src/sbbs3 && \
     make hash && \
     make git_branch.h git_hash.h && \
     make sexyz JSINCLUDE=/build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src CRYPTLIBINCLUDE=/build/sbbs/3rdp/dist/cryptlib
-
-# build xdms
-RUN cd /build && \
-    wget https://zakalwe.fi/~shd/foss/xdms/xdms-1.3.2.tar.bz2 && \
-    tar xjfv xdms-1.3.2.tar.bz2 && \
-    cd xdms-1.3.2 && \
-    ./configure && \
-    make install
 
 # build enigma
 RUN cd /build && \
@@ -59,23 +51,27 @@ RUN cd /build && \
     npm cache clean --force
 
 
-
-FROM ${docker_arch}/node:14-alpine
+FROM node:14.17-slim
 
 ARG arch
 
-RUN apk upgrade --update-cache --available && \
-    apk add --update bash \
-        zip \
-        unzip \
-        lha \
-        unrar \
-        p7zip \
-        unarj \
-	    perl-image-exiftool && \
-        apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
-        lrzsz && \
-        rm -rf /var/cache/apk/*
+# update base package
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get autoremove -y
+
+# install dependencies
+RUN apt-get install -y --no-install-recommends \
+    ca-certificates \
+    zip \
+    unzip \
+    lhasa \
+    unrar-free \
+    p7zip \
+    arj \
+    exiftool \
+    lrzsz \
+    xdms
 
 # node libs
 COPY --from=build /usr/local/lib/node_modules /usr/local/lib/node_modules
