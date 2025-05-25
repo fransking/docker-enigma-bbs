@@ -1,6 +1,6 @@
 ARG docker_arch
 
-FROM node:14.17-slim as build
+FROM node:22-bookworm-slim as build
 
 ENV ENIGMA_BRANCH master
 
@@ -21,7 +21,7 @@ RUN apt-get install -y --no-install-recommends \
     libnspr4-dev \
     autoconf \
     pkg-config \
-    python \
+    python3 \
     zip
 
 # download Synchronet source for sexys
@@ -44,14 +44,21 @@ RUN cd /build/sbbs/3rdp/build && \
     make sexyz JSINCLUDE=/build/sbbs/3rdp/src/mozjs/js-1.8.5/js/src CRYPTLIBINCLUDE=/build/sbbs/3rdp/dist/cryptlib
 
 # build enigma
+#RUN cd /build && \
+#    git clone https://github.com/NuSkooler/enigma-bbs.git --branch $ENIGMA_BRANCH && \
+#    cd /build/enigma-bbs &&  \ 
+#    git reset --hard f3d0da2 && \
+
 RUN cd /build && \
     git clone https://github.com/NuSkooler/enigma-bbs.git --depth 1 --branch $ENIGMA_BRANCH && \
-    cd /build/enigma-bbs && npm install --only=production && \
+    cd /build/enigma-bbs &&  \ 
+    npm install -g npm@7 && \
+    npm install --only=production && \
     npm install -g pm2 && \
     npm cache clean --force
 
 
-FROM node:14.17-slim
+FROM node:22-bookworm-slim
 
 ARG arch
 
