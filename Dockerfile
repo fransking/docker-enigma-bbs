@@ -1,6 +1,6 @@
 ARG docker_arch
 
-FROM node:22-bookworm-slim as build
+FROM node:22-bookworm-slim AS build
 
 ENV ENIGMA_BRANCH master
 
@@ -52,8 +52,7 @@ RUN cd /build/sbbs/3rdp/build && \
 RUN cd /build && \
     git clone https://github.com/NuSkooler/enigma-bbs.git --depth 1 --branch $ENIGMA_BRANCH && \
     cd /build/enigma-bbs &&  \ 
-    npm install -g npm@7 && \
-    npm install --only=production && \
+    npm ci && \
     npm install -g pm2 && \
     npm cache clean --force
 
